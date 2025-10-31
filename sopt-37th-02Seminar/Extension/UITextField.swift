@@ -14,9 +14,9 @@ enum TextFieldStyle: Int {
 }
 
 extension UITextField {
-   
-// 어차피 MainViewController에서 조건문을 사용해야 했기 때문에
-// placeholder를 간편하게 호출하기위한 시도.. 이게 더 편한코드가 맞는지 모르겠음
+    
+//placeholder를 간편하게 호출하기위한 시도..
+// 어차피 MainViewController에서 조건문을 사용해야 했기 때문에 이게 굳이 필요했는지 의문이었어서 주석으로 변경했습니다
 
 //    func changePlaceholder() {
 //        

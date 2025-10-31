@@ -10,8 +10,6 @@ import UIKit
 class WelcomeViewController: UIViewController {
     
     // MARK: - Properties
-    
-    weak var delegate: WelcomeViewControllerDelegate?
 
     
     var name: String?
@@ -54,11 +52,6 @@ class WelcomeViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         addLayout()
-    }
-    
-    override func viewWillDisappear(_ animated: Bool) {
-        delegate?.clearLoginView()
-
     }
     
     // MARK: - Action

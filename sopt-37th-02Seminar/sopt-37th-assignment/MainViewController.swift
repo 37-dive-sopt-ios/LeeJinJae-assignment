@@ -7,10 +7,6 @@
 
 import UIKit
 
-protocol WelcomeViewControllerDelegate: AnyObject {
-    func clearLoginView()
-}
-
 protocol BottomSheetDelegate: AnyObject {
     func showNewEmail(_ email: String)
 }
@@ -179,6 +175,11 @@ class MainViewController: UIViewController {
         setupTapGesture()
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        emailTextField.text = ""
+        passwordTextField.text = ""
+    }
+    
     // MARK: - ActionMethod
     
     @objc
@@ -257,8 +258,8 @@ class MainViewController: UIViewController {
     private func pushToWelcomeVC() {
         let welcomeViewController = WelcomeViewController()
         welcomeViewController.name = emailTextField.text
-        welcomeViewController.delegate = self
         welcomeViewController.navigationItem.title = "대체 뼈찜 누가 시켰어"
+        view.endEditing(true)
         self.navigationController?.pushViewController(welcomeViewController, animated: true)
     }
     
@@ -349,6 +350,30 @@ extension MainViewController: UITextFieldDelegate {
         }
         
     }
+    
+    
+    // 엔터를 누르면 키보드 숨기는 코드
+
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+            // 두개의 텍스트필드를 모두 종료 (키보드 내려가기)
+            if emailTextField.text != "", passwordTextField.text != "" {
+               passwordTextField.resignFirstResponder()
+                return true
+            // 두번째 텍스트필드로 넘어가도록
+            } else if emailTextField.text != "" {
+                passwordTextField.becomeFirstResponder()
+                return true
+            }
+            return false
+
+        }
+    
+    //화면을 터치했을 때 키보드를 안보이게 하는 코드
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        emailTextField.resignFirstResponder()
+        passwordTextField.resignFirstResponder()
+    }
+   
 }
 
 
@@ -387,15 +412,6 @@ extension MainViewController {
         cleanEmailTextFieldButton.anchor(trailing: emailTextField.trailingAnchor, trailingPadding: 20)
         cleanPasswordTextFieldButton.anchor(trailing: securityToggleButton.leadingAnchor, trailingPadding: 10)
         resetIdTap.centerX(inView: view, topAnchor: loginButton.bottomAnchor, paddingTop: 50)
-    }
-}
-
-// MARK: - CustomDelegate
-
-extension MainViewController: WelcomeViewControllerDelegate {
-    func clearLoginView() {
-        emailTextField.text = ""
-        passwordTextField.text = ""
     }
 }
 
