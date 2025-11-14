@@ -1,0 +1,49 @@
+//
+//  UIFont.swift
+//  sopt-37th-02Seminar
+//
+//  Created by JIN on 10/26/25.
+//
+
+import Foundation
+import UIKit
+
+enum FontName: String {
+    case pretendardBold = "Pretendard-Bold"
+    case pretendardSemiBold = "Pretendard-SemiBold"
+    case pretendardLight = "Pretendard-Light"
+    case pretendardMedium = "Pretendard-Medium"
+    case pretendardRegular = "Pretendard-Regular"
+    case pretendardExtraBold = "Pretendard-ExtraBold"
+}
+ 
+extension UIFont {
+    static func font(_ style: FontName, ofSize size: CGFloat) -> UIFont {
+        guard let customFont = UIFont(name: style.rawValue, size: size) else {
+            return UIFont.systemFont(ofSize: size)
+        }
+        return customFont
+    }
+    
+    
+    static var size17: UIFont {
+        return UIFont.font(.pretendardBold, ofSize: 17)
+    }
+    
+    static var size17Bold: UIFont {
+        return UIFont.font(.pretendardExtraBold, ofSize: 17)
+    }
+    
+    static var size12: UIFont {
+        return UIFont.font(.pretendardRegular, ofSize: 12)
+   }
+   
+    
+    static var size14: UIFont {
+       return UIFont.font(.pretendardSemiBold, ofSize: 14)
+   }
+    
+     static var size24: UIFont {
+        return UIFont.font(.pretendardExtraBold, ofSize: 24)
+    }
+}
