@@ -35,3 +35,8 @@ struct UserResponse: Decodable {
     public let email: String?
     public let age: Int?
 }
+
+/// 회원탈퇴 응답 모델
+struct DeleteUserResponse: Decodable {
+    public let message: String?
+}

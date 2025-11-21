@@ -13,14 +13,15 @@ import Foundation
  enum UserAPI {
     case register(RegisterRequest)           // POST /api/v1/users - 회원가입
     case login(LoginRequest)                 // POST /api/v1/auth/login - 로그인
+    case getUser(id: Int)
+    case updateUser(id: Int, UpdateUserRequest)
+    case deleteUser(id: Int)
 }
 
 extension UserAPI: TargetType {
 
     /// 기본 URL
     public var baseURL: String {
-        // SOPT 세미나 서버 URL (4주차 임시 개방)
-        // TODO: 실제 배포 시에는 xcconfig 파일이나 환경 변수로 관리하세요
         return Environment.baseURL
     }
 
@@ -31,6 +32,12 @@ extension UserAPI: TargetType {
             return "/api/v1/users"
         case .login:
             return "/api/v1/auth/login"
+        case .getUser(let id):
+            return "/api/v1/users/\(id)"
+        case .updateUser(let id, _):
+            return "/api/v1/users/\(id)"
+        case .deleteUser(let id):
+            return "/api/v1/users/\(id)"
         }
     }
 
@@ -41,6 +48,12 @@ extension UserAPI: TargetType {
             return .post
         case .login:
             return .post
+        case .getUser:
+            return .get
+        case .updateUser:
+            return .patch
+        case .deleteUser:
+            return .delete
         }
     }
 
@@ -54,6 +67,16 @@ extension UserAPI: TargetType {
         case .login(let request):
             // JSON 인코딩 가능한 객체를 바디로 전송
             return .requestJSONEncodable(request)
+
+        case .getUser:
+            return .requestPlain
+
+        case .updateUser(_, let request):
+            // JSON 인코딩 가능한 객체를 바디로 전송
+            return .requestJSONEncodable(request)
+
+        case .deleteUser:
+            return .requestPlain
         }
     }
 
@@ -104,8 +127,48 @@ extension UserAPI {
         guard let data = response.data else {
             throw NetworkError.noData
         }
-        
+
         return data
+    }
+
+    static func performGetUser(
+        id: Int,
+        provider: NetworkProviding = NetworkProvider()
+    ) async throws -> UserResponse {
+        // BaseResponse로 감싸진 응답 디코딩
+        let response: BaseResponse<UserResponse> = try await provider.request(UserAPI.getUser(id: id))
+        guard let data = response.data else {
+            throw NetworkError.noData
+        }
+
+        return data
+    }
+
+    static func performUpdateUser(
+        id: Int,
+        name: String?,
+        email: String?,
+        age: Int?,
+        provider: NetworkProviding = NetworkProvider()
+    ) async throws -> UserResponse {
+        let request = UpdateUserRequest(name: name, email: email, age: age)
+        // BaseResponse로 감싸진 응답 디코딩
+        let response: BaseResponse<UserResponse> = try await provider.request(UserAPI.updateUser(id: id, request))
+        guard let data = response.data else {
+            throw NetworkError.noData
+        }
+
+        return data
+    }
+
+    static func performDeleteUser(
+        id: Int,
+        provider: NetworkProviding = NetworkProvider()
+    ) async throws -> String {
+        // BaseResponse로 감싸진 응답 디코딩
+        let response: BaseResponse<DeleteUserResponse?> = try await provider.request(UserAPI.deleteUser(id: id))
+
+        return response.message ?? "회원탈퇴가 완료되었습니다."
     }
 
 }
