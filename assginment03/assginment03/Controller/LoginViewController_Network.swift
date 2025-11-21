@@ -1,8 +1,5 @@
 //
-//  LoginViewController.swift
-//  sopt-37th-practice04
 //
-//  Created by JIN on 11/21/25.
 //
 
 
@@ -12,7 +9,18 @@ import SnapKit
 final class LoginViewController_Network: BaseViewController {
     
     // MARK: - UI Components
-    
+
+    private let scrollView: UIScrollView = {
+        let scrollView = UIScrollView()
+        scrollView.showsVerticalScrollIndicator = true
+        return scrollView
+    }()
+
+    private let contentView: UIView = {
+        let view = UIView()
+        return view
+    }()
+
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.text = "4차 세미나"
@@ -94,10 +102,55 @@ final class LoginViewController_Network: BaseViewController {
         button.addTarget(self, action: #selector(loginButtonTapped), for: .touchUpInside)
         return button
     }()
-    
+
+    private lazy var logoutButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setTitle("로그아웃", for: .normal)
+        button.backgroundColor = .systemBlue
+        button.setTitleColor(.white, for: .normal)
+        button.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
+        button.layer.cornerRadius = 8
+        button.addTarget(self, action: #selector(logoutButtonTapped), for: .touchUpInside)
+        return button
+    }()
+
+    private lazy var withdrawButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setTitle("회원탈퇴", for: .normal)
+        button.backgroundColor = .systemRed
+        button.setTitleColor(.white, for: .normal)
+        button.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
+        button.layer.cornerRadius = 8
+        button.addTarget(self, action: #selector(withdrawButtonTapped), for: .touchUpInside)
+        return button
+    }()
+
+    private lazy var updateInfoButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setTitle("회원정보 수정", for: .normal)
+        button.backgroundColor = .systemPurple
+        button.setTitleColor(.white, for: .normal)
+        button.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
+        button.layer.cornerRadius = 8
+        button.addTarget(self, action: #selector(updateInfoButtonTapped), for: .touchUpInside)
+        return button
+    }()
+
+    private lazy var getUserButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setTitle("개인정보 조회", for: .normal)
+        button.backgroundColor = .systemOrange
+        button.setTitleColor(.white, for: .normal)
+        button.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
+        button.layer.cornerRadius = 8
+        button.addTarget(self, action: #selector(getUserButtonTapped), for: .touchUpInside)
+        return button
+    }()
+
     // MARK: - Properties
-    
+
     private let provider: NetworkProviding
+    private var currentUserId: Int?
     
     // MARK: - Init
     
@@ -122,7 +175,9 @@ final class LoginViewController_Network: BaseViewController {
     // MARK: - UI & Layout
     
     private func setHierarchy() {
-        view.addSubviews(
+        view.addSubview(scrollView)
+        scrollView.addSubview(contentView)
+        contentView.addSubviews(
             titleLabel,
             usernameTextField,
             passwordTextField,
@@ -130,13 +185,26 @@ final class LoginViewController_Network: BaseViewController {
             emailTextField,
             ageTextField,
             registerButton,
-            loginButton
+            loginButton,
+            logoutButton,
+            withdrawButton,
+            updateInfoButton,
+            getUserButton
         )
     }
     
     private func setLayout() {
+        scrollView.snp.makeConstraints {
+            $0.edges.equalTo(view.safeAreaLayoutGuide)
+        }
+
+        contentView.snp.makeConstraints {
+            $0.edges.equalTo(scrollView.contentLayoutGuide)
+            $0.width.equalTo(scrollView.frameLayoutGuide)
+        }
+
         titleLabel.snp.makeConstraints {
-            $0.top.equalTo(view.safeAreaLayoutGuide).offset(25)
+            $0.top.equalToSuperview().offset(25)
             $0.horizontalEdges.equalToSuperview().inset(20)
         }
         
@@ -181,6 +249,31 @@ final class LoginViewController_Network: BaseViewController {
             $0.horizontalEdges.equalToSuperview().inset(20)
             $0.height.equalTo(55)
         }
+
+        logoutButton.snp.makeConstraints {
+            $0.top.equalTo(loginButton.snp.bottom).offset(12)
+            $0.horizontalEdges.equalToSuperview().inset(20)
+            $0.height.equalTo(55)
+        }
+
+        withdrawButton.snp.makeConstraints {
+            $0.top.equalTo(logoutButton.snp.bottom).offset(12)
+            $0.horizontalEdges.equalToSuperview().inset(20)
+            $0.height.equalTo(55)
+        }
+
+        updateInfoButton.snp.makeConstraints {
+            $0.top.equalTo(withdrawButton.snp.bottom).offset(12)
+            $0.horizontalEdges.equalToSuperview().inset(20)
+            $0.height.equalTo(55)
+        }
+
+        getUserButton.snp.makeConstraints {
+            $0.top.equalTo(updateInfoButton.snp.bottom).offset(12)
+            $0.horizontalEdges.equalToSuperview().inset(20)
+            $0.height.equalTo(55)
+            $0.bottom.equalToSuperview().inset(30)
+        }
     }
     
     // MARK: - Actions
@@ -195,7 +288,6 @@ final class LoginViewController_Network: BaseViewController {
             return
         }
         
-        // Swift Concurrency를 사용한 네트워크 요청!
         Task {
             await performRegister(
                 username: username,
@@ -213,16 +305,60 @@ final class LoginViewController_Network: BaseViewController {
             showAlert(title: "입력 오류", message: "아이디와 비밀번호를 입력해주세요.")
             return
         }
-        
-        // Swift Concurrency를 사용한 네트워크 요청!
+
         Task {
             await performLogin(username: username, password: password)
         }
     }
-    
+
+    @objc private func logoutButtonTapped() {
+        Task {
+            await performLogout()
+        }
+    }
+
+    @objc private func withdrawButtonTapped() {
+        guard let userId = currentUserId else {
+            showAlert(title: "회원탈퇴 실패", message: "먼저 로그인해주세요.")
+            return
+        }
+
+        Task {
+            await performDeleteUser(id: userId)
+        }
+    }
+
+    @objc private func updateInfoButtonTapped() {
+        guard let userId = currentUserId else {
+            showAlert(title: "회원정보 수정 실패", message: "먼저 로그인해주세요.")
+            return
+        }
+
+        guard let name = nameTextField.text,
+              let email = emailTextField.text,
+              let ageText = ageTextField.text, let age = Int(ageText) else {
+            showAlert(title: "입력 오류", message: "수정할 정보를 입력해주세요.")
+            return
+        }
+
+        Task {
+            await performUpdateUser(id: userId, name: name, email: email, age: age)
+        }
+    }
+
+    @objc private func getUserButtonTapped() {
+        guard let userId = currentUserId else {
+            showAlert(title: "개인정보 조회 실패", message: "먼저 로그인해주세요.")
+            return
+        }
+
+        Task {
+            await performGetUser(id: userId)
+        }
+    }
+
     // MARK: - Network Methods (Swift Concurrency!)
     
-    /// 회원가입 API 호출
     @MainActor
     private func performRegister(
         username: String,
@@ -234,7 +370,6 @@ final class LoginViewController_Network: BaseViewController {
         loadingIndicator.startAnimating()
         
         do {
-            // UserAPI의 convenience method 사용
             let response = try await UserAPI.performRegister(
                 username: username,
                 password: password,
@@ -244,14 +379,11 @@ final class LoginViewController_Network: BaseViewController {
                 provider: provider
             )
             
-            // 성공 시 Welcome 화면으로 이동
             showAlert(title: "회원가입 성공", message: "회원가입이 완료되었습니다!") { [weak self] in
                 self?.navigateToWelcome(userId: response.id, userName: response.name)
             }
         } catch let error as NetworkError {
-            // 콘솔에 상세 에러 로그 출력
             print("🚨 [Register Error] \(error.detailedDescription)")
-            // 사용자에게는 친절한 메시지 표시
             showAlert(title: "회원가입 실패", message: error.localizedDescription)
         } catch {
             print("🚨 [Register Unknown Error] \(error)")
@@ -261,36 +393,120 @@ final class LoginViewController_Network: BaseViewController {
         loadingIndicator.stopAnimating()
     }
     
-    /// 로그인 API 호출
     @MainActor
     private func performLogin(username: String, password: String) async {
         loadingIndicator.startAnimating()
-        
+
         do {
-            // UserAPI의 convenience method 사용
             let response = try await UserAPI.performLogin(
                 username: username,
                 password: password,
                 provider: provider
             )
-            
-            // 성공 시 Welcome 화면으로 이동
-            showAlert(title: "로그인 성공", message: response.message) { [weak self] in
-                self?.navigateToWelcome(userId: response.userId, userName: username)
-            }
+
+            currentUserId = response.userId
+
+            showAlert(title: "로그인 성공", message: response.message)
         } catch let error as NetworkError {
-            // 콘솔에 상세 에러 로그 출력
             print("🚨 [Login Error] \(error.detailedDescription)")
-            // 사용자에게는 친절한 메시지 표시
             showAlert(title: "로그인 실패", message: error.localizedDescription)
         } catch {
             print("🚨 [Login Unknown Error] \(error)")
             showAlert(title: "로그인 실패", message: error.localizedDescription)
         }
-        
+
         loadingIndicator.stopAnimating()
     }
-    
+
+    @MainActor
+    private func performLogout() async {
+        currentUserId = nil
+        usernameTextField.text = ""
+        passwordTextField.text = ""
+
+        showAlert(title: "로그아웃 성공", message: "로그아웃되었습니다.")
+    }
+
+    @MainActor
+    private func performDeleteUser(id: Int) async {
+        loadingIndicator.startAnimating()
+
+        do {
+            let message = try await UserAPI.performDeleteUser(id: id, provider: provider)
+
+            currentUserId = nil
+            usernameTextField.text = ""
+            passwordTextField.text = ""
+            nameTextField.text = ""
+            emailTextField.text = ""
+            ageTextField.text = ""
+
+            showAlert(title: "회원탈퇴 성공", message: message)
+        } catch let error as NetworkError {
+            print("🚨 [Delete User Error] \(error.detailedDescription)")
+            showAlert(title: "회원탈퇴 실패", message: error.localizedDescription)
+        } catch {
+            print("🚨 [Delete User Unknown Error] \(error)")
+            showAlert(title: "회원탈퇴 실패", message: error.localizedDescription)
+        }
+
+        loadingIndicator.stopAnimating()
+    }
+
+    @MainActor
+    private func performUpdateUser(id: Int, name: String, email: String, age: Int) async {
+        loadingIndicator.startAnimating()
+
+        do {
+            let response = try await UserAPI.performUpdateUser(
+                id: id,
+                name: name,
+                email: email,
+                age: age,
+                provider: provider
+            )
+
+            showAlert(title: "회원정보 수정 성공", message: "회원정보가 성공적으로 수정되었습니다.\n이름: \(response.name)\n이메일: \(response.email)\n나이: \(response.age)")
+        } catch let error as NetworkError {
+            print("🚨 [Update User Error] \(error.detailedDescription)")
+            showAlert(title: "회원정보 수정 실패", message: error.localizedDescription)
+        } catch {
+            print("🚨 [Update User Unknown Error] \(error)")
+            showAlert(title: "회원정보 수정 실패", message: error.localizedDescription)
+        }
+
+        loadingIndicator.stopAnimating()
+    }
+
+    @MainActor
+    private func performGetUser(id: Int) async {
+        loadingIndicator.startAnimating()
+
+        do {
+            let response = try await UserAPI.performGetUser(id: id, provider: provider)
+
+            showAlert(
+                title: "개인정보 조회 성공",
+                message: """
+                ID: \(response.id)
+                Username: \(response.username)
+                이름: \(response.name)
+                이메일: \(response.email)
+                나이: \(response.age)
+                상태: \(response.status)
+                """
+            )
+        } catch let error as NetworkError {
+            print("🚨 [Get User Error] \(error.detailedDescription)")
+            showAlert(title: "개인정보 조회 실패", message: error.localizedDescription)
+        } catch {
+            print("🚨 [Get User Unknown Error] \(error)")
+            showAlert(title: "개인정보 조회 실패", message: error.localizedDescription)
+        }
+
+        loadingIndicator.stopAnimating()
+    }
+
     // MARK: - Navigation
     
     private func navigateToWelcome(userId: Int, userName: String) {

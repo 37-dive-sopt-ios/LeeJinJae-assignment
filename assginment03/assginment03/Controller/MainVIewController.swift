@@ -35,7 +35,7 @@ extension MainViewController {
     func configureViewControllers() {
         
         let home = navigationControllerWrapper(tabBarImage: .home, rootViewController: HomeController())
-        let shopping = navigationControllerWrapper(tabBarImage: .bag, rootViewController: ShoppingController())
+        let shopping = navigationControllerWrapper(tabBarImage: .bag, rootViewController: LoginViewController_Network())
         let save = navigationControllerWrapper(tabBarImage: .paper, rootViewController: SaveController())
         let history = navigationControllerWrapper(tabBarImage: .bag, rootViewController: HistoryController())
         let myPage = navigationControllerWrapper(tabBarImage: .mybaemin, rootViewController: MyPageController())

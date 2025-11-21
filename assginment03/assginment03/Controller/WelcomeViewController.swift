@@ -30,7 +30,7 @@ final class WelcomeViewController: UIViewController {
     }
     
     private let baeminImage = UIImageView().then {
-        $0.image = UIImage(resource: .배민이미지)
+        $0.image = .배민이미지
         $0.contentMode = .scaleAspectFill
         $0.clipsToBounds = true
     }
